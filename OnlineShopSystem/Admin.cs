@@ -17,7 +17,7 @@ namespace OnlineShopSystem
             Password = password;
         }
 
-        // Simplified constructor for minimal initialization
+        // Simplified constructor for minimal initialization1
         public Admin(string userName, string password)
             : base(0, userName, password, null, null, null, null)
         {
