@@ -23,8 +23,8 @@ public class Customer : User
         this.address = address;
     }
 
-    // Customer login method with corrected credentials check
-    public static Customer? CustomerLogin()
+    // Customer login method with automatic test customer
+    public static Customer? CustomerLogin(List<Customer> customerList)
     {
         Console.Clear();
         Console.WriteLine("===== Customer Login =====");
@@ -35,11 +35,20 @@ public class Customer : User
         Console.Write("Enter Password: ");
         string password = Console.ReadLine()?.Trim() ?? "";
 
-        // Check if the entered credentials match the predefined ones
-        if (username == "customer" && password == "customer123")
+        // Check if the user entered "test" and "test123" for automatic login
+        if (username == "test" && password == "test123")
+        {
+            Console.WriteLine("Login successful! You are logged in as the test customer.");
+            return new Customer(1, "test", "test123", "test@example.com", "123-456-7890", "123 Test St", "Test City");
+        }
+
+        // Search for the customer with the provided username and password
+        Customer? customer = customerList.FirstOrDefault(c => c.UserName == username && c.Password == password);
+
+        if (customer != null)
         {
             Console.WriteLine("Login successful!");
-            return new Customer(1, username, password, "customer@example.com", "123-456-7890", "123 Main St", "Anytown");
+            return customer;
         }
         else
         {

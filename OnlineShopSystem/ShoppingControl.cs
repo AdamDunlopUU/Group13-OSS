@@ -1,379 +1,341 @@
-﻿//Nathan A gallagher +
-using OnlineShopSystem;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
-public class ShoppingControl
+namespace OnlineShopSystem
 {
-    private List<Customer> customerList;
-    private List<string> productList;
-    private List<string> categoryList;
-    private Dictionary<string, List<string>> productCategory;
-    private List<Admin> adminList;
-
-    public ShoppingControl()
+    public class ShoppingControl
     {
-        customerList = new List<Customer>();
-        productList = new List<string>();
-        categoryList = new List<string>();
-        adminList = new List<Admin>();  // List of Admins
-        SetCategories();
-        StoreProductCategory();
+        private List<User> customerList;
+        private List<string> productList;
+        private List<string> categoryList;
+        private Dictionary<string, List<string>> productCategory;
+        private List<string> adminList;
 
-        // Default admin (for testing purposes)
-        adminList.Add(new Admin("admin", "admin123"));
-    }
-
-    public void StoreProductCategory()
-    {
-        productCategory = new Dictionary<string, List<string>>();
-        foreach (var category in categoryList)
+        public ShoppingControl()
         {
-            productCategory[category] = new List<string>();
+            customerList = new List<User>();
+            productList = new List<string>();
+            categoryList = new List<string>();
+            adminList = new List<string>();  // List of Admins
+            SetCategories();
+            StoreProductCategory();
+
+            // Load users from file
+            LoadUsers();
         }
-    }
 
-    public void SetCategories()
-    {
-        categoryList = new List<string>
+        // Load users from file or create default if file doesn't exist
+        private void LoadUsers()
         {
-            "smallCategory", "mediumCategory", "largeCategory", "specialCategory"
-        };
-    }
+            if (File.Exists("users.txt"))
+            {
+                var lines = File.ReadAllLines("users.txt");
 
-    public void AdminLogin()
-    {
-        Console.Clear();
-        Console.WriteLine("Admin Login");
-        Console.Write("Enter Admin Username: ");
-        string username = Console.ReadLine();
+                foreach (var line in lines)
+                {
+                    try
+                    {
+                        var parts = line.Split(',');
+                        if (parts.Length == 7)
+                        {
+                            int userID = int.Parse(parts[0]);
+                            string userName = parts[1];
+                            string userPassword = parts[2];
+                            string userEmail = parts[3];
+                            string phoneNumber = parts[4];
+                            string userStreet = parts[5];
+                            string userCity = parts[6];
 
-        Console.Write("Enter Admin Password: ");
-        string password = Console.ReadLine();
-
-        // Fixed admin credentials
-        string adminUsername = "admin";
-        string adminPassword = "admin123";
-
-        if (username == adminUsername && password == adminPassword)
-        {
-            Console.WriteLine("Login successful.");
-            AdminMenu();
+                            // Add user to list
+                            customerList.Add(new User(userID, userName, userPassword, userEmail, phoneNumber, userStreet, userCity));
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Skipping invalid line: {line}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error loading user: {ex.Message}");
+                    }
+                }
+            }
+            else
+            {
+                // Default customer for testing if file does not exist
+                customerList.Add(new User(1, "test", "test123", "test@example.com", "555-0000", "Test Street", "Test City"));
+                SaveUsers();  // Save default user to file
+            }
         }
-        else
+
+        // Save users to file
+        private void SaveUsers()
         {
-            Console.WriteLine("Invalid credentials. Press any key to try again.");
-            Console.ReadKey();
+            var lines = customerList.Select(u => $"{u.UserID},{u.UserName},{u.UserPassword},{u.UserEmail},{u.PhoneNumber},{u.UserStreet},{u.UserCity}");
+            File.WriteAllLines("users.txt", lines);
         }
-    }
 
-    public void CustomerLogin()
-    {
-        Console.Clear();
-        Console.WriteLine("Customer Login");
-        Console.Write("Enter Username: ");
-        string username = Console.ReadLine();
-
-        Console.Write("Enter Password: ");
-        string password = Console.ReadLine();
-
-        Customer customer = customerList.FirstOrDefault(c => c.UserName == username && c.Password == password);
-        if (customer != null)
+        // Store product categories
+        public void StoreProductCategory()
         {
-            Console.WriteLine("Login successful.");
-            CustomerMenu();
+            productCategory = new Dictionary<string, List<string>>();
+            foreach (var category in categoryList)
+            {
+                productCategory[category] = new List<string>();
+            }
         }
-        else
-        {
-            Console.WriteLine("Invalid credentials. Press any key to try again.");
-            Console.ReadKey();
-        }
-    }
 
-    public void AdminMenu()
-    {
-        bool exit = false;
-        while (!exit)
+        // Set predefined categories
+        public void SetCategories()
+        {
+            categoryList = new List<string>
+            {
+                "smallCategory", "mediumCategory", "largeCategory", "specialCategory"
+            };
+        }
+
+        // Admin login
+        public void AdminLogin()
         {
             Console.Clear();
-            Console.WriteLine("Admin Menu:");
-            Console.WriteLine("1. Add a Product");
-            Console.WriteLine("2. Remove a Product");
-            Console.WriteLine("3. Manage Categories");
-            Console.WriteLine("4. Manage Customers");
-            Console.WriteLine("5. Logout");
-            Console.Write("Select an option: ");
-            string choice = Console.ReadLine();
+            Console.WriteLine("Admin Login");
+            Console.Write("Enter Admin Username: ");
+            string username = Console.ReadLine();
 
-            switch (choice)
+            Console.Write("Enter Admin Password: ");
+            string password = Console.ReadLine();
+
+            string adminUsername = "admin";
+            string adminPassword = "admin123";
+
+            if (username == adminUsername && password == adminPassword)
             {
-                case "1":
-                    AddProduct();
-                    break;
-                case "2":
-                    RemoveProduct();
-                    break;
-                case "3":
-                    ManageCategories();
-                    break;
-                case "4":
-                    ManageCustomers();
-                    break;
-                case "5":
-                    exit = true;
-                    break;
-                default:
-                    Console.WriteLine("Invalid option. Try again.");
-                    break;
+                Console.WriteLine("Login successful.");
+                AdminMenu();
+            }
+            else
+            {
+                Console.WriteLine("Invalid credentials. Press any key to try again.");
+                Console.ReadKey();
             }
         }
-    }
 
-    public void ManageCustomers()
-    {
-        Console.Clear();
-        Console.WriteLine("Manage Customers");
-        Console.WriteLine("1. Add a Customer");
-        Console.WriteLine("2. View Customers");
-        Console.WriteLine("3. Back to Admin Menu");
-        string choice = Console.ReadLine();
-
-        switch (choice)
-        {
-            case "1":
-                AddCustomer();
-                break;
-            case "2":
-                ViewCustomers();
-                break;
-            case "3":
-                return;
-            default:
-                Console.WriteLine("Invalid option. Try again.");
-                break;
-        }
-    }
-
-    public void AddCustomer()
-    {
-        Console.Clear();
-        Console.WriteLine("Add New Customer");
-        Console.Write("Enter username: ");
-        string username = Console.ReadLine();
-        Console.Write("Enter password: ");
-        string password = Console.ReadLine();
-        Console.Write("Enter email: ");
-        string email = Console.ReadLine();
-        Console.Write("Enter phone number: ");
-        string phoneNumber = Console.ReadLine();
-        Console.Write("Enter address: ");
-        string address = Console.ReadLine();
-
-        Customer newCustomer = new Customer(username, password, email, phoneNumber, address);
-        customerList.Add(newCustomer);
-        Console.WriteLine("Customer added successfully.");
-    }
-
-    public void ViewCustomers()
-    {
-        Console.Clear();
-        Console.WriteLine("Registered Customers:");
-        foreach (var customer in customerList)
-        {
-            Console.WriteLine(customer.ToString());
-        }
-        Console.WriteLine("Press any key to return.");
-        Console.ReadKey();
-    }
-
-    public void CustomerMenu()
-    {
-        bool exit = false;
-        while (!exit)
+        // Customer login
+        public void CustomerLogin()
         {
             Console.Clear();
-            Console.WriteLine("Customer Menu:");
-            Console.WriteLine("1. View Products");
-            Console.WriteLine("2. View Categories");
-            Console.WriteLine("3. Logout");
-            Console.Write("Select an option: ");
-            string choice = Console.ReadLine();
+            Console.WriteLine("Customer Login");
+            Console.Write("Enter Username: ");
+            string username = Console.ReadLine();
 
-            switch (choice)
+            Console.Write("Enter Password: ");
+            string password = Console.ReadLine();
+
+            // Validate against customer list
+            User user = customerList.FirstOrDefault(u => u.UserName.Equals(username, StringComparison.OrdinalIgnoreCase) && u.UserPassword == password);
+
+            if (user != null)
             {
-                case "1":
-                    ViewProducts();
-                    break;
-                case "2":
-                    ViewCategories();
-                    break;
-                case "3":
-                    exit = true;
-                    break;
-                default:
-                    Console.WriteLine("Invalid option. Try again.");
-                    break;
+                Console.WriteLine("Login successful.");
+                CustomerMenu();
+            }
+            else
+            {
+                Console.WriteLine("Invalid credentials. Press any key to try again.");
+                Console.ReadKey();
             }
         }
-    }
 
-    public void ViewProducts()
-    {
-        Console.WriteLine("Product List:");
-        foreach (var product in productList)
+        // Admin menu
+        public void AdminMenu()
         {
-            Console.WriteLine(product);
-        }
-    }
-
-    public void ViewCategories()
-    {
-        Console.WriteLine("Categories:");
-        foreach (var category in categoryList)
-        {
-            Console.WriteLine($"- {category}");
-        }
-    }
-
-    public void AddProduct()
-    {
-        Console.WriteLine("Enter product name:");
-        string product = Console.ReadLine();
-        productList.Add(product);
-
-        Console.WriteLine("Select a category for the product:");
-        for (int i = 0; i < categoryList.Count; i++)
-        {
-            Console.WriteLine($"{i + 1}. {categoryList[i]}");
-        }
-
-        int categorySelect = int.Parse(Console.ReadLine()) - 1;
-        if (categorySelect >= 0 && categorySelect < categoryList.Count)
-        {
-            string category = categoryList[categorySelect];
-            if (productCategory.ContainsKey(category))
+            bool exit = false;
+            while (!exit)
             {
-                productCategory[category].Add(product);
-                Console.WriteLine($"{product} has been added to the {category} category.");
+                Console.Clear();
+                Console.WriteLine("Admin Menu:");
+                Console.WriteLine("1. Add a Product");
+                Console.WriteLine("2. Remove a Product");
+                Console.WriteLine("3. Manage Categories");
+                Console.WriteLine("4. Manage Customers");
+                Console.WriteLine("5. Logout");
+                Console.Write("Select an option: ");
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        AddProduct();
+                        break;
+                    case "2":
+                        RemoveProduct();
+                        break;
+                    case "3":
+                        ManageCategories();
+                        break;
+                    case "4":
+                        ManageCustomers();
+                        break;
+                    case "5":
+                        exit = true;
+                        break;
+                    default:
+                        Console.WriteLine("Invalid option. Try again.");
+                        break;
+                }
             }
         }
-        else
-        {
-            Console.WriteLine("Invalid category selection.");
-        }
-    }
 
-    public void RemoveProduct()
-    {
-        Console.WriteLine("Select a product to remove:");
-        for (int i = 0; i < productList.Count; i++)
+        private void AddProduct()
         {
-            Console.WriteLine($"{i + 1}. {productList[i]}");
+            throw new NotImplementedException();
         }
 
-        int delete = int.Parse(Console.ReadLine()) - 1;
-        if (delete >= 0 && delete < productList.Count)
+        private void RemoveProduct()
         {
-            string product = productList[delete];
-            productList.RemoveAt(delete);
-            foreach (var category in productCategory.Values)
+            throw new NotImplementedException();
+        }
+
+        private void ManageCategories()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ManageCustomers()
+        {
+            throw new NotImplementedException();
+        }
+
+        // Customer menu
+        public void CustomerMenu()
+        {
+            bool exit = false;
+            while (!exit)
             {
-                category.Remove(product);
+                Console.Clear();
+                Console.WriteLine("Customer Menu:");
+                Console.WriteLine("1. View Products");
+                Console.WriteLine("2. View Categories");
+                Console.WriteLine("3. Logout");
+                Console.Write("Select an option: ");
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        ViewProducts();
+                        break;
+                    case "2":
+                        ViewCategories();
+                        break;
+                    case "3":
+                        exit = true;
+                        break;
+                    default:
+                        Console.WriteLine("Invalid option. Try again.");
+                        break;
+                }
             }
-            Console.WriteLine($"{product} has been removed.");
         }
-        else
+
+        // View products
+        public void ViewProducts()
         {
-            Console.WriteLine("Invalid selection.");
+            Console.WriteLine("Product List:");
+            foreach (var product in productList)
+            {
+                Console.WriteLine(product);
+            }
         }
-    }
 
-    public void ManageCategories()
-    {
-        Console.Clear();
-        Console.WriteLine("Manage Categories");
-        Console.WriteLine("1. View All Categories");
-        Console.WriteLine("2. View Products in a Category");
-        Console.WriteLine("3. Add a Category");
-        Console.WriteLine("4. Remove a Category");
-        Console.WriteLine("5. Back to Admin Menu");
-        string choice = Console.ReadLine();
-
-        switch (choice)
+        // View categories
+        public void ViewCategories()
         {
-            case "1":
-                ViewCategories();
-                break;
-            case "2":
-                ViewProductsInCategory();
-                break;
-            case "3":
-                AddCategory();
-                break;
-            case "4":
-                RemoveCategory();
-                break;
-            case "5":
+            Console.WriteLine("Categories:");
+            foreach (var category in categoryList)
+            {
+                Console.WriteLine($"- {category}");
+            }
+        }
+
+        // Add a new customer
+        public void AddCustomer()
+        {
+            Console.Clear();
+            Console.WriteLine("Add New Customer");
+            Console.Write("Enter username: ");
+            string username = Console.ReadLine();
+            Console.Write("Enter password: ");
+            string password = Console.ReadLine();
+            Console.Write("Enter email: ");
+            string email = Console.ReadLine();
+            Console.Write("Enter phone number: ");
+            string phoneNumber = Console.ReadLine();
+            Console.Write("Enter address: ");
+            string address = Console.ReadLine();
+
+            // Check for duplicate username
+            if (customerList.Any(c => c.UserName == username))
+            {
+                Console.WriteLine("Username already exists.");
                 return;
-            default:
-                Console.WriteLine("Invalid option. Try again.");
-                break;
-        }
-    }
-
-    private void ViewProductsInCategory()
-    {
-        Console.WriteLine("Enter the category to view products:");
-        string category = Console.ReadLine();
-        if (productCategory.ContainsKey(category))
-        {
-            foreach (var product in productCategory[category])
-            {
-                Console.WriteLine($"- {product}");
             }
-        }
-        else
-        {
-            Console.WriteLine("No products found in this category.");
-        }
-    }
 
-    public void AddCategory()
-    {
-        Console.WriteLine("Enter new category name:");
-        string newCategory = Console.ReadLine();
-        if (!categoryList.Contains(newCategory))
-        {
-            categoryList.Add(newCategory);
-            productCategory[newCategory] = new List<string>();
-            Console.WriteLine($"{newCategory} category added.");
-        }
-        else
-        {
-            Console.WriteLine("Category already exists.");
-        }
-    }
-
-    public void RemoveCategory()
-    {
-        Console.WriteLine("Select a category to remove:");
-        for (int i = 0; i < categoryList.Count; i++)
-        {
-            Console.WriteLine($"{i + 1}. {categoryList[i]}");
+            // Add the new customer
+            int userID = customerList.Count + 1;  // Assign new userID
+            User newCustomer = new User(userID, username, password, email, phoneNumber, address, address);
+            customerList.Add(newCustomer);
+            SaveUsers();  // Save customers to file
+            Console.WriteLine("Customer added successfully.");
         }
 
-        int categoryToDelete = int.Parse(Console.ReadLine()) - 1;
-        if (categoryToDelete >= 0 && categoryToDelete < categoryList.Count)
+        // View customers
+        public void ViewCustomers()
         {
-            string category = categoryList[categoryToDelete];
-            categoryList.RemoveAt(categoryToDelete);
-            productCategory.Remove(category);
-            Console.WriteLine($"{category} category has been removed.");
+            Console.Clear();
+            Console.WriteLine("Registered Customers:");
+            foreach (var customer in customerList)
+            {
+                Console.WriteLine(customer.ToString());
+            }
+            Console.WriteLine("Press any key to return.");
+            Console.ReadKey();
         }
-        else
+
+        // Entry Point for the Application
+        public static void Main(string[] args)
         {
-            Console.WriteLine("Invalid selection.");
+            ShoppingControl shoppingControl = new ShoppingControl();
+
+            bool exit = false;
+            while (!exit)
+            {
+                Console.Clear();
+                Console.WriteLine("Welcome to the Online Shop System");
+                Console.WriteLine("1. Admin Login");
+                Console.WriteLine("2. Customer Login");
+                Console.WriteLine("3. Exit");
+                Console.Write("Select an option: ");
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        shoppingControl.AdminLogin();
+                        break;
+                    case "2":
+                        shoppingControl.CustomerLogin();
+                        break;
+                    case "3":
+                        exit = true;
+                        break;
+                    default:
+                        Console.WriteLine("Invalid option. Try again.");
+                        break;
+                }
+            }
         }
     }
 }

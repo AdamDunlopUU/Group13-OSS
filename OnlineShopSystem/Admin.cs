@@ -63,6 +63,9 @@ namespace OnlineShopSystem
 
         public void AdminDashboard(List<Product> productList, List<User> userList, List<Customer> customerList)
         {
+            // Ensure that the default "test" customer is always available in the customer list
+            EnsureTestCustomerExists(customerList);
+
             while (true)
             {
                 Console.Clear();
@@ -83,7 +86,7 @@ namespace OnlineShopSystem
                         ProductManagementMenu(productList);
                         break;
                     case "2":
-                        UserManagementMenu(userList);
+                        UserManagementMenu(userList, customerList);
                         break;
                     case "3":
                         ViewReports(productList, userList);
@@ -98,6 +101,17 @@ namespace OnlineShopSystem
                         Console.ReadKey();
                         break;
                 }
+            }
+        }
+
+        // Ensure that the "test" customer is added if not already present
+        private void EnsureTestCustomerExists(List<Customer> customerList)
+        {
+            var testCustomer = customerList.FirstOrDefault(c => c.UserName == "test");
+            if (testCustomer == null)
+            {
+                Customer newTestCustomer = new Customer(0, "test", "test123", "test@example.com", "123-456-7890", "123 Test St", "Test City");
+                customerList.Add(newTestCustomer);
             }
         }
 
@@ -139,9 +153,21 @@ namespace OnlineShopSystem
             // Implement Product Management Menu logic here...
         }
 
-        private void UserManagementMenu(List<User> userList)
+        private void UserManagementMenu(List<User> userList, List<Customer> customerList)
         {
-            // Implement User Management Menu logic here...
+            Console.Clear();
+            Console.WriteLine("===== USER MANAGEMENT =====");
+
+            // Display customers (including the test customer)
+            Console.WriteLine("List of Customers:");
+            foreach (var customer in customerList)
+            {
+                Console.WriteLine($"ID: {customer.UserID}, Username: {customer.UserName}, Email: {customer.Email}, Status: {customer.Status}");
+            }
+
+            // Allow admin to manage customers here (e.g., Edit or Remove)
+            Console.WriteLine("\nPress any key to continue...");
+            Console.ReadKey();
         }
 
         private void ViewReports(List<Product> productList, List<User> userList)
