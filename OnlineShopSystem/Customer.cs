@@ -1,10 +1,9 @@
 ﻿using OnlineShopSystem;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 public class Customer : User
 {
+    private string? address;
+
     public string Status { get; set; } = "active"; // Default status is "active"
     public string Role { get; set; } = "Customer"; // Default role is "Customer"
     public string? Password { get; private set; }
@@ -18,8 +17,14 @@ public class Customer : User
         Status = status;
     }
 
+    public Customer(string? username, string? password, string? email, string? phoneNumber, string? address)
+        : base(0, username, password, email, phoneNumber, address ?? "", "")
+    {
+        this.address = address;
+    }
+
     // Customer login method with corrected credentials check
-    public static Customer CustomerLogin()
+    public static Customer? CustomerLogin()
     {
         Console.Clear();
         Console.WriteLine("===== Customer Login =====");
@@ -58,7 +63,7 @@ public class Customer : User
             Console.WriteLine("4. Logout");
             Console.Write("Select an option: ");
 
-            string choice = Console.ReadLine();
+            string choice = Console.ReadLine()?.Trim() ?? "";
 
             switch (choice)
             {
@@ -99,18 +104,30 @@ public class Customer : User
         }
 
         Console.WriteLine("Enter Product ID to add to your basket or 0 to go back:");
-        int productId = int.Parse(Console.ReadLine());
+
+        if (!int.TryParse(Console.ReadLine(), out int productId) || productId < 0)
+        {
+            Console.WriteLine("Invalid input. Press any key to return.");
+            Console.ReadKey();
+            return;
+        }
 
         if (productId == 0)
         {
             return; // Go back to the previous menu
         }
 
-        Product selectedProduct = productList.FirstOrDefault(p => p.ProductID == productId);
+        Product? selectedProduct = productList.FirstOrDefault(p => p.ProductID == productId);
         if (selectedProduct != null)
         {
             Console.Write("Enter Quantity: ");
-            int quantity = int.Parse(Console.ReadLine());
+            if (!int.TryParse(Console.ReadLine(), out int quantity) || quantity <= 0)
+            {
+                Console.WriteLine("Invalid quantity. Press any key to return.");
+                Console.ReadKey();
+                return;
+            }
+
             Basket.AddItem(selectedProduct, quantity);
             Console.WriteLine($"{selectedProduct.Name} added to your basket.");
         }
