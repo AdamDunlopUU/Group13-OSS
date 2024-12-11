@@ -24,7 +24,7 @@ namespace OnlineShopSystem
             Password = password;
         }
 
-        public static Admin AdminLogin(List<Admin> adminList)
+        public static Admin? AdminLogin(List<Admin> adminList)
         {
             Console.Clear();
             Console.WriteLine("===== Admin Login =====");
