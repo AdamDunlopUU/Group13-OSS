@@ -162,7 +162,7 @@ namespace OnlineShopSystem
             Console.WriteLine("List of Customers:");
             foreach (var customer in customerList)
             {
-                Console.WriteLine($"ID: {customer.UserID}, Username: {customer.UserName}, Email: {customer.Email}, Status: {customer.Status}");
+                Console.WriteLine($"ID: {customer.UserID}, Username: {customer.UserName}, Email: {customer.UserEmail}, Status: {customer.Status}");
             }
 
             // Allow admin to manage customers here (e.g., Edit or Remove)
