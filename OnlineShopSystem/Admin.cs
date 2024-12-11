@@ -63,7 +63,7 @@ namespace OnlineShopSystem
 
         public void AdminDashboard(List<Product> productList, List<User> userList, List<Customer> customerList)
         {
-            // Ensure that the default "test" customer is always available in the customer list
+            // Ensure that the default "test" customer is always available in the customer list!
             EnsureTestCustomerExists(customerList);
 
             while (true)
